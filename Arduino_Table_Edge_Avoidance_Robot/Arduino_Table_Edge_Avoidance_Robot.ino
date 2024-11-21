@@ -1,136 +1,136 @@
-//Arduino Table edge Avoidance Robot
-//Created By DIY BUILDER
-//Contact me here https://www.instagram.com/diy.builder/
-//You need to include AF Motor.h library before uploading the sketch, otherwise you'll get compilation error message.
+// Arduino Table Edge Avoidance Robot
+// Author: Sai Teja Jarabala
+// This program controls a robot that avoids table edges using IR sensors and Bluetooth commands.
+// Before uploading the code, ensure the AFMotor.h library is installed.
 
-#include <AFMotor.h>
+#include <AFMotor.h> // Library for controlling DC motors via Adafruit Motor Shield
 
-
+// Motor Initialization
 AF_DCMotor motor1(1, MOTOR12_1KHZ); 
 AF_DCMotor motor2(2, MOTOR12_1KHZ); 
 AF_DCMotor motor3(3, MOTOR34_1KHZ);
 AF_DCMotor motor4(4, MOTOR34_1KHZ);
 
-int IR1 = A0;
-int IR2 = A1;
+// IR Sensor Pin Definitions
+int IR1 = A0; // Right IR sensor
+int IR2 = A1; // Left IR sensor
 
+// Bluetooth Command Variable
+char command;
 
-char command; 
-
-void setup() 
-{       
-  Serial.begin(9600);  //Set the baud rate to your Bluetooth module.
+void setup() {
+  // Initialize Serial Communication
+  Serial.begin(9600); // Set baud rate for Bluetooth communication
+  
+  // Configure IR Sensor Pins as Input
   pinMode(IR1, INPUT);
   pinMode(IR2, INPUT);
-    
 }
 
-void loop(){
-  
-  /*Serial.print("Right");
-    Serial.println(Right);
-    Serial.print("Left");
-    Serial.println(Left);*/
+void loop() {
+  // Check if a command is received via Bluetooth
+  if (Serial.available() > 0) { 
+    command = Serial.read(); // Read the received command
+    Stop(); // Stop the robot before executing a new command
     
-  if(Serial.available() > 0){ 
-    command = Serial.read(); 
-    Stop(); 
+    Serial.println(command); // Print the received command for debugging
     
-    Serial.println(command);
-    
-    
-    switch(command){
-    case 'F':  
-      forward();
-      break;
-    case 'B':  
-       back();
-      break;
-    case 'L':  
-      left();
-      break;
-    case 'R':
-      right();
-      break;
+    // Execute commands based on Bluetooth input
+    switch (command) {
+      case 'F':  
+        forward(); // Move forward
+        break;
+      case 'B':  
+        back(); // Move backward
+        break;
+      case 'L':  
+        left(); // Turn left
+        break;
+      case 'R':
+        right(); // Turn right
+        break;
     }
-    
-    
-   
-    int Right = digitalRead(IR1);
-    int Left = digitalRead(IR2);
-    
-    if(Right == 1 || Left == 1) {
-      motor1.setSpeed(255);
-      motor1.run(BACKWARD);
-      motor2.setSpeed(255);
-      motor2.run(BACKWARD);
-      motor3.setSpeed(255);
-      motor3.run(BACKWARD);
-      motor4.setSpeed(255);
-      motor4.run(BACKWARD);
-      
-    }else if(Right == 0 || Left == 0) {
+  }
+  
+  // Read IR Sensor Values
+  int Right = digitalRead(IR1);
+  int Left = digitalRead(IR2);
+  
+  // Check if any sensor detects a table edge
+  if (Right == 1 || Left == 1) {
+    moveBackward(); // Move backward to avoid falling
+  } else if (Right == 0 && Left == 0) {
+    // Wait for the next Bluetooth command
+    if (Serial.available() > 0) {
       command = Serial.read();
     }
- }
+  }
 }
 
-void forward()
-{
-  motor1.setSpeed(150); //Define maximum Speed
-  motor1.run(FORWARD); //rotate the motor clockwise
-  motor2.setSpeed(150); //Define maximum Speed
-  motor2.run(FORWARD); //rotate the motor clockwise
-  motor3.setSpeed(150);//Define maximum Speed
-  motor3.run(FORWARD); //rotate the motor clockwise
-  motor4.setSpeed(150);//Define maximum Speed
-  motor4.run(FORWARD); //rotate the motor clockwise
+// Function to move the robot forward
+void forward() {
+  motor1.setSpeed(150);
+  motor1.run(FORWARD);
+  motor2.setSpeed(150);
+  motor2.run(FORWARD);
+  motor3.setSpeed(150);
+  motor3.run(FORWARD);
+  motor4.setSpeed(150);
+  motor4.run(FORWARD);
 }
 
-void back()
-{
-  motor1.setSpeed(150); //Define maximum Speed
-  motor1.run(BACKWARD); //rotate the motor anti-clockwise
-  motor2.setSpeed(150); //Define maximum Speed
-  motor2.run(BACKWARD); //rotate the motor anti-clockwise
-  motor3.setSpeed(150); //Define maximum Speed
-  motor3.run(BACKWARD); //rotate the motor anti-clockwise
-  motor4.setSpeed(150); //Define maximum Speed
-  motor4.run(BACKWARD); //rotate the motor anti-clockwise
+// Function to move the robot backward
+void back() {
+  motor1.setSpeed(150);
+  motor1.run(BACKWARD);
+  motor2.setSpeed(150);
+  motor2.run(BACKWARD);
+  motor3.setSpeed(150);
+  motor3.run(BACKWARD);
+  motor4.setSpeed(150);
+  motor4.run(BACKWARD);
 }
 
-void left()
-{
-  motor1.setSpeed(200); //Define maximum Speed
-  motor1.run(BACKWARD); //rotate the motor anti-clockwise
-  motor2.setSpeed(200); //Define maximum Speed
-  motor2.run(BACKWARD); //rotate the motor anti-clockwise
-  motor3.setSpeed(200); //Define maximum Speed
-  motor3.run(FORWARD);  //rotate the motor clockwise
-  motor4.setSpeed(200); //Define maximum Speed
-  motor4.run(FORWARD);  //rotate the motor clockwise
+// Function to turn the robot left
+void left() {
+  motor1.setSpeed(200);
+  motor1.run(BACKWARD);
+  motor2.setSpeed(200);
+  motor2.run(BACKWARD);
+  motor3.setSpeed(200);
+  motor3.run(FORWARD);
+  motor4.setSpeed(200);
+  motor4.run(FORWARD);
 }
 
-void right()
-{
-  motor1.setSpeed(200); //Define maximum Speed
-  motor1.run(FORWARD); //rotate the motor clockwise
-  motor2.setSpeed(200); //Define maximum Speed
-  motor2.run(FORWARD); //rotate the motor clockwise
-  motor3.setSpeed(200); //Define maximum Speed
-  motor3.run(BACKWARD); //rotate the motor anti-clockwise
-  motor4.setSpeed(200); //Define maximum Speed
-  motor4.run(BACKWARD); //rotate the motor anti-clockwise
-} 
+// Function to turn the robot right
+void right() {
+  motor1.setSpeed(200);
+  motor1.run(FORWARD);
+  motor2.setSpeed(200);
+  motor2.run(FORWARD);
+  motor3.setSpeed(200);
+  motor3.run(BACKWARD);
+  motor4.setSpeed(200);
+  motor4.run(BACKWARD);
+}
 
-void Stop()
-{
-  motor1.setSpeed(0); //Define minimum Speed
-  motor1.run(RELEASE); //stop the motor when release the button
-  motor2.setSpeed(0); //Define minimum Speed
-  motor2.run(RELEASE); //rotate the motor clockwise
-  motor3.setSpeed(0); //Define minimum Speed
-  motor3.run(RELEASE); //stop the motor when release the button
-  motor4.setSpeed(0); //Define minimum Speed
-  motor4.run(RELEASE); //stop the motor when release the button
+// Function to stop all motors
+void Stop() {
+  motor1.run(RELEASE);
+  motor2.run(RELEASE);
+  motor3.run(RELEASE);
+  motor4.run(RELEASE);
+}
+
+// Function to move the robot backward for edge avoidance
+void moveBackward() {
+  motor1.setSpeed(255);
+  motor1.run(BACKWARD);
+  motor2.setSpeed(255);
+  motor2.run(BACKWARD);
+  motor3.setSpeed(255);
+  motor3.run(BACKWARD);
+  motor4.setSpeed(255);
+  motor4.run(BACKWARD);
 }
