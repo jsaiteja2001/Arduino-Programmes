@@ -1,38 +1,47 @@
-//ARDUINO OBSTACLE AVOIDING CAR//
-// Before uploading the code you have to install the necessary library//
-//AFMotor Library https://learn.adafruit.com/adafruit-motor-shield/library-install //
-//NewPing Library https://github.com/livetronic/Arduino-NewPing// 
-//Servo Library https://github.com/arduino-libraries/Servo.git //
-// To Install the libraries go to sketch >> Include Library >> Add .ZIP File >> Select the Downloaded ZIP files From the Above links //
+// Arduino Obstacle Avoiding Car
+// Libraries Required:
+// AFMotor Library: https://learn.adafruit.com/adafruit-motor-shield/library-install
+// NewPing Library: https://github.com/livetronic/Arduino-NewPing
+// Servo Library: https://github.com/arduino-libraries/Servo.git
+// Install the libraries using Sketch >> Include Library >> Add .ZIP Library.
 
+#include <AFMotor.h>  // Motor control library
+#include <NewPing.h>  // Ultrasonic sensor library
+#include <Servo.h>    // Servo motor library
 
-#include <AFMotor.h>  
-#include <NewPing.h>
-#include <Servo.h> 
+// Pin Definitions for Ultrasonic Sensor
+#define TRIG_PIN A0 // Trigger pin for HC-SR04
+#define ECHO_PIN A1 // Echo pin for HC-SR04
+#define MAX_DISTANCE 200 // Maximum distance for ultrasonic sensor (in cm)
 
-#define TRIG_PIN A0 
-#define ECHO_PIN A1 
-#define MAX_DISTANCE 200 
-#define MAX_SPEED 190 // sets speed of DC  motors
-#define MAX_SPEED_OFFSET 20
+// Motor Speed Configuration
+#define MAX_SPEED 190 // Maximum speed for motors
+#define MAX_SPEED_OFFSET 20 // Offset for speed adjustment
 
+// Ultrasonic Sensor Initialization
 NewPing sonar(TRIG_PIN, ECHO_PIN, MAX_DISTANCE); 
 
-AF_DCMotor motor1(1, MOTOR12_1KHZ); 
-AF_DCMotor motor2(2, MOTOR12_1KHZ);
-AF_DCMotor motor3(3, MOTOR34_1KHZ);
-AF_DCMotor motor4(4, MOTOR34_1KHZ);
-Servo myservo;   
+// Motor Initialization
+AF_DCMotor motor1(1, MOTOR12_1KHZ); // Motor connected to M1
+AF_DCMotor motor2(2, MOTOR12_1KHZ); // Motor connected to M2
+AF_DCMotor motor3(3, MOTOR34_1KHZ); // Motor connected to M3
+AF_DCMotor motor4(4, MOTOR34_1KHZ); // Motor connected to M4
 
-boolean goesForward=false;
-int distance = 100;
-int speedSet = 0;
+// Servo Initialization
+Servo myservo;  
+
+// Global Variables
+boolean goesForward = false; // Tracks forward movement state
+int distance = 100;          // Stores measured distance
+int speedSet = 0;            // Speed control variable
 
 void setup() {
-
+  // Initialize servo motor and set initial position
   myservo.attach(10);  
-  myservo.write(115); 
-  delay(2000);
+  myservo.write(115); // Neutral position for servo
+  delay(2000); // Allow time for servo to stabilize
+
+  // Perform initial distance readings to stabilize the sensor
   distance = readPing();
   delay(100);
   distance = readPing();
@@ -44,105 +53,110 @@ void setup() {
 }
 
 void loop() {
- int distanceR = 0;
- int distanceL =  0;
- delay(40);
- 
- if(distance<=15)
- {
-  moveStop();
-  delay(100);
-  moveBackward();
-  delay(300);
-  moveStop();
-  delay(200);
-  distanceR = lookRight();
-  delay(200);
-  distanceL = lookLeft();
-  delay(200);
+  int distanceR = 0; // Distance to the right
+  int distanceL = 0; // Distance to the left
+  delay(40); // Short delay to prevent excessive polling
 
-  if(distanceR>=distanceL)
-  {
-    turnRight();
-    moveStop();
-  }else
-  {
-    turnLeft();
-    moveStop();
+  // Check if obstacle is too close
+  if (distance <= 15) {
+    moveStop();       // Stop the car
+    delay(100);
+    moveBackward();   // Move backward slightly
+    delay(300);
+    moveStop();       // Stop again
+    delay(200);
+
+    // Scan surroundings
+    distanceR = lookRight(); // Measure distance to the right
+    delay(200);
+    distanceL = lookLeft();  // Measure distance to the left
+    delay(200);
+
+    // Decide the direction based on scanned distances
+    if (distanceR >= distanceL) {
+      turnRight(); // Turn right if right distance is greater
+      moveStop();
+    } else {
+      turnLeft(); // Turn left if left distance is greater
+      moveStop();
+    }
+  } else {
+    // If no obstacle is close, move forward
+    moveForward();
   }
- }else
- {
-  moveForward();
- }
- distance = readPing();
+
+  // Update distance measurement
+  distance = readPing();
 }
 
-int lookRight()
-{
-    myservo.write(50); 
-    delay(500);
-    int distance = readPing();
-    delay(100);
-    myservo.write(115); 
-    return distance;
+// Function to scan right and return distance
+int lookRight() {
+  myservo.write(50); // Rotate servo to the right
+  delay(500); // Allow servo to stabilize
+  int distance = readPing(); // Read distance
+  delay(100);
+  myservo.write(115); // Reset servo to neutral position
+  return distance;
 }
 
-int lookLeft()
-{
-    myservo.write(170); 
-    delay(500);
-    int distance = readPing();
-    delay(100);
-    myservo.write(115); 
-    return distance;
-    delay(100);
+// Function to scan left and return distance
+int lookLeft() {
+  myservo.write(170); // Rotate servo to the left
+  delay(500); // Allow servo to stabilize
+  int distance = readPing(); // Read distance
+  delay(100);
+  myservo.write(115); // Reset servo to neutral position
+  return distance;
 }
 
+// Function to read distance from the ultrasonic sensor
 int readPing() { 
-  delay(70);
-  int cm = sonar.ping_cm();
-  if(cm==0)
-  {
-    cm = 250;
+  delay(70); // Short delay to prevent sensor overuse
+  int cm = sonar.ping_cm(); // Measure distance in cm
+  if (cm == 0) {
+    cm = 250; // Return a high value if no obstacle is detected
   }
   return cm;
 }
 
+// Function to stop all motors
 void moveStop() {
-  motor1.run(RELEASE); 
+  motor1.run(RELEASE);
   motor2.run(RELEASE);
   motor3.run(RELEASE);
   motor4.run(RELEASE);
-  } 
+} 
   
+// Function to move the car forward
 void moveForward() {
-
- if(!goesForward)
-  {
-    goesForward=true;
-    motor1.run(FORWARD);      
+  if (!goesForward) {
+    goesForward = true;
+    motor1.run(FORWARD);
     motor2.run(FORWARD);
-    motor3.run(FORWARD); 
-    motor4.run(FORWARD);     
-   for (speedSet = 0; speedSet < MAX_SPEED; speedSet +=2) // slowly bring the speed up to avoid loading down the batteries too quickly
-   {
-    motor1.setSpeed(speedSet);
-    motor2.setSpeed(speedSet);
-    motor3.setSpeed(speedSet);
-    motor4.setSpeed(speedSet);
-    delay(5);
-   }
+    motor3.run(FORWARD);
+    motor4.run(FORWARD);
+
+    // Gradually increase speed to prevent sudden jerks
+    for (speedSet = 0; speedSet < MAX_SPEED; speedSet += 2) {
+      motor1.setSpeed(speedSet);
+      motor2.setSpeed(speedSet);
+      motor3.setSpeed(speedSet);
+      motor4.setSpeed(speedSet);
+      delay(5);
+    }
   }
 } 
 
+// Function to move the car backward
 void moveBackward() {
-    goesForward=false;
-    motor1.run(BACKWARD);      
-    motor2.run(BACKWARD);
-    motor3.run(BACKWARD);
-    motor4.run(BACKWARD);  
-  for (speedSet = 0; speedSet < MAX_SPEED; speedSet +=2) // slowly bring the speed up to avoid loading down the batteries too quickly
-  {
+  goesForward = false;
+  motor1.run(BACKWARD);
+  motor2.run(BACKWARD);
+  motor3.run(BACKWARD);
+  motor4.run(BACKWARD);
+
+  // Gradually increase speed to prevent sudden jerks
+  for (speedSet = 0; speedSet < MAX_SPEED; speedSet += 2) {
     motor1.setSpeed(speedSet);
     motor2.setSpeed(speedSet);
     motor3.setSpeed(speedSet);
@@ -151,26 +165,28 @@ void moveBackward() {
   }
 }  
 
+// Function to turn the car right
 void turnRight() {
   motor1.run(FORWARD);
   motor2.run(FORWARD);
   motor3.run(BACKWARD);
   motor4.run(BACKWARD);     
-  delay(500);
-  motor1.run(FORWARD);      
+  delay(500); // Allow time for the turn
+  motor1.run(FORWARD);
   motor2.run(FORWARD);
   motor3.run(FORWARD);
   motor4.run(FORWARD);      
 } 
  
+// Function to turn the car left
 void turnLeft() {
-  motor1.run(BACKWARD);     
-  motor2.run(BACKWARD);  
+  motor1.run(BACKWARD);
+  motor2.run(BACKWARD);
   motor3.run(FORWARD);
   motor4.run(FORWARD);   
-  delay(500);
-  motor1.run(FORWARD);     
+  delay(500); // Allow time for the turn
+  motor1.run(FORWARD);
   motor2.run(FORWARD);
   motor3.run(FORWARD);
   motor4.run(FORWARD);
-}  
+}
