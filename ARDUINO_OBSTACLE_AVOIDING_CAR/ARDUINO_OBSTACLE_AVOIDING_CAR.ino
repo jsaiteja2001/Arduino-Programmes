@@ -1,4 +1,10 @@
 // Arduino Obstacle Avoiding Car
+// Author: Sai Teja Jarabala
+// Copyright (c) 2024 Sai Teja Jarabala
+//
+// This software is licensed under the MIT License.
+// For more details, see the LICENSE file in the repository.
+
 // Libraries Required:
 // AFMotor Library: https://learn.adafruit.com/adafruit-motor-shield/library-install
 // NewPing Library: https://github.com/livetronic/Arduino-NewPing
