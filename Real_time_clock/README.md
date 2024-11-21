@@ -47,5 +47,21 @@ This project displays real-time clock (RTC) data, including the current date, ti
    - Open the Serial Monitor to view the current date and time.
    - The LCD will display the date, time, and day of the week.
 
-## Example Output
-### LCD Display
+
+## Troubleshooting
+- **Incorrect Date/Time**:
+  - Uncomment and modify the `rtc.setDOW()`, `rtc.setTime()`, and `rtc.setDate()` lines in the code to set the correct date and time.
+- **LCD Not Displaying Data**:
+  - Ensure the correct I2C address (`0x27`) is used in the code.
+  - Check the connections between the Arduino and LCD.
+
+## Notes
+- The date and time are updated every second.
+- The DS3231 RTC module retains the date and time even if the Arduino is powered off, thanks to its onboard battery.
+
+## License
+This project is licensed under the [MIT License](./LICENSE).
+
+## Author
+**Sai Teja Jarabala**
+
